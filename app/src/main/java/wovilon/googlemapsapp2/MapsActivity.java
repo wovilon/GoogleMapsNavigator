@@ -40,12 +40,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-
-
+        //start point autocomplete. Here we define an adapter
         AutoCompleteTextView startEdit=(AutoCompleteTextView)findViewById(R.id.StartAutocomplete);
-        GooglePlacesAdapter adapter = new GooglePlacesAdapter(this,startEdit,
-                android.R.layout.simple_dropdown_item_1line);
-        startEdit.setAdapter(adapter);
+        GooglePlacesAdapter adapterStart = new GooglePlacesAdapter(this,startEdit,
+                android.R.layout.simple_dropdown_item_1line, mMap,startAsynkHandler);
+        startEdit.setAdapter(adapterStart);
+
+        AutoCompleteTextView ToEdit=(AutoCompleteTextView)findViewById(R.id.ToAutocomplete);
+        GooglePlacesAdapter adapterTo = new GooglePlacesAdapter(this,ToEdit,
+                android.R.layout.simple_dropdown_item_1line, mMap,startAsynkHandler);
+        ToEdit.setAdapter(adapterTo);
 
     }
 
@@ -114,11 +118,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .getJSONObject("polyline").getString("points");
                     pointsEncoded[i] = polyline.toString();
                 }
-            }catch(JSONException je){Log.d("MyLOG", "JSONExceprion in AsynkTask");}
+            }catch(JSONException je){Log.d("MyLOG", "JSONException in AsynkTask");}
 
             drawRoute(mMap, pointsEncoded);
         }
+    };
 
+    //interface realization for geocoding request case.Here we parse JSON
+    AsynkTaskHandler startAsynkHandler=new AsynkTaskHandler() {
+        @Override
+        public void onAsynkTaskFinish(String resultString) {
+        System.exit(0);
+        }
     };
 
     public void drawRoute(GoogleMap googleMap, String[] pointsEncoded){
