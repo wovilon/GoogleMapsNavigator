@@ -1,4 +1,4 @@
-package wovilon.googlemapsapp2;
+package wovilon.googlemapsapp2.io;
 
 import android.content.Context;
 import android.os.AsyncTask;
@@ -20,33 +20,31 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import wovilon.googlemapsapp2.R;
 import wovilon.googlemapsapp2.google_libraries.PolyUtil;
 import wovilon.googlemapsapp2.interfaces.AsynkTaskHandler;
 
 
-class AsynkRouteRequest extends AsyncTask {
+public class AsynkRouteRequest extends AsyncTask {
     private URL url;
     private String resultString;
     String mResultString;
     private String apiKey;
     private List<LatLng> points;
     String[] pointsEncoded;
-    AsynkTaskHandler asynkTaskHandler;
+    public AsynkTaskHandler asynkTaskHandler;
     Context context;
 
-    AsynkRouteRequest(Context context, AsynkTaskHandler asynkTaskHandler){
+    public AsynkRouteRequest(Context context, URL url, AsynkTaskHandler asynkTaskHandler){
+        this.url=url;
         this.context=context;
-        this.apiKey=context.getString(R.string.google_maps_key);
         this.asynkTaskHandler=asynkTaskHandler;
+        this.apiKey=context.getString(R.string.google_maps_key);
     }
 
     @Override
     protected void onPreExecute() {
-        try {
-            //url for GoogleMaps API
-        url=new URL("https://maps.googleapis.com/maps/api/directions/" +
-                "json?origin=Toronto&destination=Montreal&key="+apiKey);
-        }catch (MalformedURLException me) {}
+
             super.onPreExecute();
     }
 
@@ -86,7 +84,7 @@ class AsynkRouteRequest extends AsyncTask {
                     data = baos.toByteArray();
                     //whole JSON
                     resultString = new String(data, "UTF-8");
-
+                    Log.d("MyLOG",resultString);
 
                 } else {resultString="Server connection error";
                 }

@@ -1,11 +1,9 @@
 package wovilon.googlemapsapp2;
 
-import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -19,21 +17,15 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.xml.sax.SAXException;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
+import wovilon.googlemapsapp2.adapters.GooglePlacesAdapter;
 import wovilon.googlemapsapp2.google_libraries.PolyUtil;
 import wovilon.googlemapsapp2.interfaces.AsynkTaskHandler;
+import wovilon.googlemapsapp2.io.AsynkRouteRequest;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -49,10 +41,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
 
-        GooglePlacesAdapter adapter = new GooglePlacesAdapter(this,
+
+        AutoCompleteTextView startEdit=(AutoCompleteTextView)findViewById(R.id.StartAutocomplete);
+        GooglePlacesAdapter adapter = new GooglePlacesAdapter(this,startEdit,
                 android.R.layout.simple_dropdown_item_1line);
-        AutoCompleteTextView textView=(AutoCompleteTextView)findViewById(R.id.StartAutocomplete);
-        textView.setAdapter(adapter);
+        startEdit.setAdapter(adapter);
 
     }
 
@@ -92,22 +85,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void onBtGoClick(View view) {
-        AsynkRouteRequest asynkRouteRequest=new AsynkRouteRequest(this, asynkTaskHandler);
-        asynkRouteRequest.execute();
+        //url for GoogleMaps API
+        try {
+            URL url = new URL("https://maps.googleapis.com/maps/api/directions/" +
+                    "json?origin=Toronto&destination=Montreal&key=" + getString(R.string.google_maps_key));
+            //make http request with above url to get route from Google API
+            AsynkRouteRequest asynkRouteRequest = new AsynkRouteRequest(this, url, asynkTaskHandler);
+            asynkRouteRequest.execute();
+        } catch (MalformedURLException me) {}
 
     }
 
+    //works when AsynkRouteRequest finished
     AsynkTaskHandler asynkTaskHandler=new AsynkTaskHandler() {
         String[] pointsEncoded;
+
         @Override
         public void onAsynkTaskFinish(String resultString) {
             try {
-                JSONObject jsonObj = new JSONObject(resultString);
                 //get route from JSON
+                JSONObject jsonObj = new JSONObject(resultString);
                 JSONArray jsonRoutes = jsonObj.getJSONArray("routes").getJSONObject(0)
                         .getJSONArray("legs").getJSONObject(0).getJSONArray("steps");
-
-                Log.d("MyLOG", jsonRoutes.toString());
 
                 pointsEncoded = new String[jsonRoutes.length()];
                 for (int i = 0; i < jsonRoutes.length(); i++) {
@@ -115,12 +114,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .getJSONObject("polyline").getString("points");
                     pointsEncoded[i] = polyline.toString();
                 }
-
-                Log.d("MyLOG", resultString);
-                // JSONObject polyline=new JSONObject(routes.getJSONObject());
-
-
-
             }catch(JSONException je){Log.d("MyLOG", "JSONExceprion in AsynkTask");}
 
             drawRoute(mMap, pointsEncoded);
