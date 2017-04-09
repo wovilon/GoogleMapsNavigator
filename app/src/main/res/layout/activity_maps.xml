@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+android:id="@+id/activity_main"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+
+tools:context="wovilon.googlemapsapp2.MapsActivity">
+
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="wovilon.googlemapsapp2.MapsActivity"
+        tools:layout="@android:layout/activity_list_item"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true" />
+
+    <AutoCompleteTextView
+        android:layout_height="wrap_content"
+        android:id="@+id/StartAutocomplete"
+        android:hint="@string/From"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_width="180dp"
+        android:completionThreshold="3"/>
+
+    <AutoCompleteTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/ToAutocomplete"
+        android:hint="@string/To"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/StartAutocomplete"
+        android:completionThreshold="3"/>
+
+    <Button
+        android:text="@string/MyRoutes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonMyRoutes"
+        android:layout_below="@+id/StartAutocomplete"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:text="@string/Go"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/ButtonGo"
+        android:onClick="onBtGoClick"
+        android:layout_alignBaseline="@+id/buttonMyRoutes"
+        android:layout_alignBottom="@+id/buttonMyRoutes"
+        android:layout_toEndOf="@+id/buttonMyRoutes" />
+
+    <Button
+        android:text="@string/RemovePoint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/ButtonDelete"
+        android:layout_below="@+id/ToAutocomplete"
+        android:layout_toEndOf="@+id/ButtonGo" />
+
+
+</RelativeLayout>

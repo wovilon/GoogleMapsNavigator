@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">GoogleMaps App2</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="From">From</string>
+    <string name="To">To</string>
+    <string name="Go">Go</string>
+    <string name="MyRoutes">My routes</string>
+    <string name="RemovePoint">Remove point</string>
+</resources>
