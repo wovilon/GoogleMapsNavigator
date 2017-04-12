@@ -4,6 +4,8 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -13,6 +15,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.vision.barcode.Barcode;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,16 +23,22 @@ import org.json.JSONObject;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import wovilon.googlemapsapp2.adapters.GooglePlacesAdapter;
 import wovilon.googlemapsapp2.google_libraries.PolyUtil;
 import wovilon.googlemapsapp2.interfaces.AsynkTaskHandler;
 import wovilon.googlemapsapp2.io.AsynkRouteRequest;
+import wovilon.googlemapsapp2.io.GeocodeJSONParser;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    ArrayList<String> placesResultList;
+    GooglePlacesAdapter adapterStart;
+    GooglePlacesAdapter adapterNextPoint;
+    String currentPointJSON;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,16 +49,41 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        //start point autocomplete. Here we define an adapter
-        AutoCompleteTextView startEdit=(AutoCompleteTextView)findViewById(R.id.StartAutocomplete);
-        GooglePlacesAdapter adapterStart = new GooglePlacesAdapter(this,startEdit,
-                android.R.layout.simple_dropdown_item_1line, mMap,startAsynkHandler);
-        startEdit.setAdapter(adapterStart);
+        String[] COUNTRIES = new String[] {
+                "Belgium", "France", "Italy", "Germany", "Spain"
+        };
 
-        AutoCompleteTextView ToEdit=(AutoCompleteTextView)findViewById(R.id.ToAutocomplete);
-        GooglePlacesAdapter adapterTo = new GooglePlacesAdapter(this,ToEdit,
-                android.R.layout.simple_dropdown_item_1line, mMap,startAsynkHandler);
-        ToEdit.setAdapter(adapterTo);
+
+        //start point autocomplete. Here we define an adapter as well
+        AutoCompleteTextView startEdit=(AutoCompleteTextView)findViewById(R.id.StartAutocomplete);
+        placesResultList=new ArrayList<>();
+        adapterStart = new GooglePlacesAdapter(this,
+                android.R.layout.simple_dropdown_item_1line, placesResultList, startEdit, mMap, geocodeAsynkHandler);
+        startEdit.setAdapter(adapterStart);
+        startEdit.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                GeocodeJSONParser point = new GeocodeJSONParser(currentPointJSON);
+                mMap.addMarker(new MarkerOptions().position(point.getLatLng()).title(point.getFormatedAdress()));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(point.getLatLng()));
+            }
+        });
+
+
+        //next points autocomplete
+        AutoCompleteTextView toEdit=(AutoCompleteTextView)findViewById(R.id.ToAutocomplete);
+
+        adapterNextPoint = new GooglePlacesAdapter(this,
+                android.R.layout.simple_dropdown_item_1line, placesResultList, toEdit, mMap, geocodeAsynkHandler);
+        toEdit.setAdapter(adapterNextPoint);
+        toEdit.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                GeocodeJSONParser point = new GeocodeJSONParser(currentPointJSON);
+                mMap.addMarker(new MarkerOptions().position(point.getLatLng()).title(point.getFormatedAdress()));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(point.getLatLng()));
+            }
+        });
 
     }
 
@@ -69,23 +103,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        /*
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
-        LatLng place=new LatLng(-34,150);
-        mMap.addMarker(new MarkerOptions().position(place).title("MyMarker"));
-
-        PolylineOptions line=new PolylineOptions();
-        line.add(sydney);
-        line.add(place);
-        mMap.addPolyline(line);
-        try{googleMap.setMyLocationEnabled(true);}
-        catch (SecurityException se) {}
-
-        */
     }
 
     public void onBtGoClick(View view) {
@@ -118,19 +136,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .getJSONObject("polyline").getString("points");
                     pointsEncoded[i] = polyline.toString();
                 }
-            }catch(JSONException je){Log.d("MyLOG", "JSONException in AsynkTask");}
+            }catch(JSONException je){Log.d("MyLOG", "JSONException in AsynkTask while routing");}
 
             drawRoute(mMap, pointsEncoded);
         }
     };
 
-    //interface realization for geocoding request case.Here we parse JSON
-    AsynkTaskHandler startAsynkHandler=new AsynkTaskHandler() {
+
+    //interface realization for geocoding request case finish. Here we parse JSON
+    AsynkTaskHandler geocodeAsynkHandler=new AsynkTaskHandler() {
         @Override
         public void onAsynkTaskFinish(String resultString) {
-        System.exit(0);
+            try {
+                currentPointJSON=resultString;
+                GeocodeJSONParser point = new GeocodeJSONParser(resultString);
+                placesResultList.clear();
+                placesResultList.add(point.getFormatedAdress());
+                adapterStart.notifyDataSetChanged();
+                adapterNextPoint.notifyDataSetChanged();
+            }catch (NullPointerException ne){Log.d("MyLOG", "NullPointer in geocodingAsynkTastHandler");}
         }
+
     };
+
+
 
     public void drawRoute(GoogleMap googleMap, String[] pointsEncoded){
         //draw the route

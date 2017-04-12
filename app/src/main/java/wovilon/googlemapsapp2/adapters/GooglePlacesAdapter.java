@@ -21,28 +21,62 @@ import wovilon.googlemapsapp2.model.MyFilter;
 //here we define an adapter for autocomplete for geocoding
 public class GooglePlacesAdapter extends ArrayAdapter implements Filterable {
     URL url;
-    private ArrayList resultList;
+    private ArrayList<String> resultList=new ArrayList<>();
+    AsynkTaskHandler geocodeAsynkHandler;
     AutoCompleteTextView autoCompleteTextView;
     Context context;
     GoogleMap mMap;
-    AsynkTaskHandler startAsynkHandler;
+    static String[] objects = new String[] {
+            "Belgium", "France"
+    };
 
-    public GooglePlacesAdapter(Context context, AutoCompleteTextView autoCompleteTextView,
-                               int resource,GoogleMap mMap, AsynkTaskHandler startAsynkHandler) {
-        super(context, resource);
+
+
+    public GooglePlacesAdapter(Context context, int resource, ArrayList<String> resultList,
+                               AutoCompleteTextView autoCompleteTextView, GoogleMap mMap,
+                               AsynkTaskHandler geocodeAsynkHandler) {
+        super(context, resource, resultList);
+
         this.context=context;
         this.autoCompleteTextView=autoCompleteTextView;
         this.mMap=mMap;
-        this.startAsynkHandler=startAsynkHandler;
+        this.geocodeAsynkHandler=geocodeAsynkHandler;
+
     }
 
 
 
     @Override
     public Filter getFilter(){
-        MyFilter myFilter=new MyFilter(context,url,autoCompleteTextView,startAsynkHandler);
+        Filter filter = new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                FilterResults filterResults=new FilterResults();
+                String adress=autoCompleteTextView.getText().toString();
+                if (constraint!=null){
 
-        return myFilter;
+                    try {
+                        url = new URL("https://maps.googleapis.com/maps/api/geocode/" +
+                                "json?address="+adress+"&key="
+                                + context.getString(R.string.google_maps_key));
+                    }catch (MalformedURLException me){
+                        Log.d("MyLOG","URL while geocoding problem");}
+
+                    AsynkRouteRequest asynkRouteRequest=new AsynkRouteRequest(context, url, geocodeAsynkHandler);
+                    asynkRouteRequest.execute();
+
+                }
+
+                return filterResults;
+            }
+
+            @Override
+            protected void publishResults(CharSequence charSequence, FilterResults filterResults) {
+
+            }
+        };
+
+        return filter;
     }
 
 }
