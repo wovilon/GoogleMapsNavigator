@@ -8,6 +8,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 
+import com.google.android.gms.instantapps.internal.Route;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -31,6 +32,7 @@ import wovilon.googlemapsapp2.google_libraries.PolyUtil;
 import wovilon.googlemapsapp2.interfaces.AsynkTaskHandler;
 import wovilon.googlemapsapp2.io.AsynkRouteRequest;
 import wovilon.googlemapsapp2.io.GeocodeJSONParser;
+import wovilon.googlemapsapp2.model.mRoute;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -39,6 +41,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     GooglePlacesAdapter adapterStart;
     GooglePlacesAdapter adapterNextPoint;
     String currentPointJSON;
+    mRoute route;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,10 +51,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        String[] COUNTRIES = new String[] {
-                "Belgium", "France", "Italy", "Germany", "Spain"
-        };
 
 
         //start point autocomplete. Here we define an adapter as well
@@ -66,7 +65,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 GeocodeJSONParser point = new GeocodeJSONParser(currentPointJSON);
                 mMap.addMarker(new MarkerOptions().position(point.getLatLng()).title(point.getFormatedAdress()));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(point.getLatLng()));
-            }
+                route=new mRoute();
+                route.addPoint(point.getLatLng());
+                Log.d("MyLOG", route.getPointsString());
+
+                }
         });
 
 
@@ -82,6 +85,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 GeocodeJSONParser point = new GeocodeJSONParser(currentPointJSON);
                 mMap.addMarker(new MarkerOptions().position(point.getLatLng()).title(point.getFormatedAdress()));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(point.getLatLng()));
+                route.addPoint(point.getLatLng());
+                Log.d("MyLOG", route.getPointsString());
             }
         });
 
@@ -108,9 +113,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void onBtGoClick(View view) {
         //url for GoogleMaps API
+        //add origin and destination place
+        String origin=""+route.getPoint(0).latitude+","+route.getPoint(0).longitude;
+        String destination=""+route.getPoint(route.getPoints().size()-1).latitude
+                +","+route.getPoint(route.getPoints().size()-1).longitude;
+        //add waypoints if exist
+        String waypoints="";
+        if (route.getPoints().size()>2) {
+            waypoints="&waypoints=";
+            for (int i = 1; i < route.getPoints().size()-1; i++) {
+                waypoints+="via:"+route.getPoint(i).latitude+","+route.getPoint(i).longitude;
+                if (i<route.getPoints().size()-2){waypoints+="|";}
+            }
+        }
+        //form URL for directions API
         try {
             URL url = new URL("https://maps.googleapis.com/maps/api/directions/" +
-                    "json?origin=Toronto&destination=Montreal&key=" + getString(R.string.google_maps_key));
+                    "json?origin="+origin+"&destination="+destination+waypoints+"&key="
+                    + getString(R.string.google_maps_key));
             //make http request with above url to get route from Google API
             AsynkRouteRequest asynkRouteRequest = new AsynkRouteRequest(this, url, asynkTaskHandler);
             asynkRouteRequest.execute();
@@ -124,22 +144,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         @Override
         public void onAsynkTaskFinish(String resultString) {
-            try {
-                //get route from JSON
-                JSONObject jsonObj = new JSONObject(resultString);
-                JSONArray jsonRoutes = jsonObj.getJSONArray("routes").getJSONObject(0)
-                        .getJSONArray("legs").getJSONObject(0).getJSONArray("steps");
 
-                pointsEncoded = new String[jsonRoutes.length()];
-                for (int i = 0; i < jsonRoutes.length(); i++) {
-                    String polyline = jsonRoutes.getJSONObject(i)
-                            .getJSONObject("polyline").getString("points");
-                    pointsEncoded[i] = polyline.toString();
-                }
-            }catch(JSONException je){Log.d("MyLOG", "JSONException in AsynkTask while routing");}
-
-            drawRoute(mMap, pointsEncoded);
+            drawRoute(mMap, route.buildPolyline(resultString));
         }
+
     };
 
 

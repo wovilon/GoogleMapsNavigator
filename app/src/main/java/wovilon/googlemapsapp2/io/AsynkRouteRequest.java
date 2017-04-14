@@ -84,7 +84,7 @@ public class AsynkRouteRequest extends AsyncTask {
                     data = baos.toByteArray();
                     //whole JSON
                     resultString = new String(data, "UTF-8");
-                    Log.d("MyLOG",resultString);
+                    //Log.d("MyLOG",resultString);
 
                 } else {resultString="Server connection error";
                 }

@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import wovilon.googlemapsapp2.R;
 import wovilon.googlemapsapp2.interfaces.AsynkTaskHandler;
 import wovilon.googlemapsapp2.io.AsynkRouteRequest;
-import wovilon.googlemapsapp2.model.MyFilter;
+
 
 //here we define an adapter for autocomplete for geocoding
 public class GooglePlacesAdapter extends ArrayAdapter implements Filterable {
@@ -29,7 +29,6 @@ public class GooglePlacesAdapter extends ArrayAdapter implements Filterable {
     static String[] objects = new String[] {
             "Belgium", "France"
     };
-
 
 
     public GooglePlacesAdapter(Context context, int resource, ArrayList<String> resultList,
@@ -45,7 +44,6 @@ public class GooglePlacesAdapter extends ArrayAdapter implements Filterable {
     }
 
 
-
     @Override
     public Filter getFilter(){
         Filter filter = new Filter() {
@@ -54,7 +52,6 @@ public class GooglePlacesAdapter extends ArrayAdapter implements Filterable {
                 FilterResults filterResults=new FilterResults();
                 String adress=autoCompleteTextView.getText().toString();
                 if (constraint!=null){
-
                     try {
                         url = new URL("https://maps.googleapis.com/maps/api/geocode/" +
                                 "json?address="+adress+"&key="
@@ -64,7 +61,6 @@ public class GooglePlacesAdapter extends ArrayAdapter implements Filterable {
 
                     AsynkRouteRequest asynkRouteRequest=new AsynkRouteRequest(context, url, geocodeAsynkHandler);
                     asynkRouteRequest.execute();
-
                 }
 
                 return filterResults;
