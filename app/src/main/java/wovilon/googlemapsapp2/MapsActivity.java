@@ -1,9 +1,11 @@
 package wovilon.googlemapsapp2;
 
+import android.app.Activity;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -32,6 +34,8 @@ import wovilon.googlemapsapp2.google_libraries.PolyUtil;
 import wovilon.googlemapsapp2.interfaces.AsynkTaskHandler;
 import wovilon.googlemapsapp2.io.AsynkRouteRequest;
 import wovilon.googlemapsapp2.io.GeocodeJSONParser;
+import wovilon.googlemapsapp2.io.RouteURLComposer;
+import wovilon.googlemapsapp2.model.RouteDrawer;
 import wovilon.googlemapsapp2.model.mRoute;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -66,15 +70,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.addMarker(new MarkerOptions().position(point.getLatLng()).title(point.getFormatedAdress()));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(point.getLatLng()));
                 route=new mRoute();
-                route.addPoint(point.getLatLng());
-                Log.d("MyLOG", route.getPointsString());
+                route.addPoint(point.getLatLng(),point.getFormatedAdress());
 
                 }
         });
 
 
         //next points autocomplete
-        AutoCompleteTextView toEdit=(AutoCompleteTextView)findViewById(R.id.ToAutocomplete);
+        final AutoCompleteTextView toEdit=(AutoCompleteTextView)findViewById(R.id.ToAutocomplete);
 
         adapterNextPoint = new GooglePlacesAdapter(this,
                 android.R.layout.simple_dropdown_item_1line, placesResultList, toEdit, mMap, geocodeAsynkHandler);
@@ -85,8 +88,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 GeocodeJSONParser point = new GeocodeJSONParser(currentPointJSON);
                 mMap.addMarker(new MarkerOptions().position(point.getLatLng()).title(point.getFormatedAdress()));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(point.getLatLng()));
-                route.addPoint(point.getLatLng());
-                Log.d("MyLOG", route.getPointsString());
+                route.addPoint(point.getLatLng(),point.getFormatedAdress());
+                toEdit.setText("");
+
             }
         });
 
@@ -112,40 +116,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void onBtGoClick(View view) {
-        //url for GoogleMaps API
-        //add origin and destination place
-        String origin=""+route.getPoint(0).latitude+","+route.getPoint(0).longitude;
-        String destination=""+route.getPoint(route.getPoints().size()-1).latitude
-                +","+route.getPoint(route.getPoints().size()-1).longitude;
-        //add waypoints if exist
-        String waypoints="";
-        if (route.getPoints().size()>2) {
-            waypoints="&waypoints=";
-            for (int i = 1; i < route.getPoints().size()-1; i++) {
-                waypoints+="via:"+route.getPoint(i).latitude+","+route.getPoint(i).longitude;
-                if (i<route.getPoints().size()-2){waypoints+="|";}
-            }
-        }
-        //form URL for directions API
-        try {
-            URL url = new URL("https://maps.googleapis.com/maps/api/directions/" +
-                    "json?origin="+origin+"&destination="+destination+waypoints+"&key="
-                    + getString(R.string.google_maps_key));
-            //make http request with above url to get route from Google API
-            AsynkRouteRequest asynkRouteRequest = new AsynkRouteRequest(this, url, asynkTaskHandler);
-            asynkRouteRequest.execute();
-        } catch (MalformedURLException me) {}
-
+        URL url=new RouteURLComposer(this,route).formURL();
+        //make http request with above url to get route from Google API
+        AsynkRouteRequest asynkRouteRequest = new AsynkRouteRequest(this, url, asynkTaskHandler);
+        asynkRouteRequest.execute();
+        //hide keyboard
+        InputMethodManager inputMethodManager=(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(),0);
     }
 
     //works when AsynkRouteRequest finished
     AsynkTaskHandler asynkTaskHandler=new AsynkTaskHandler() {
-        String[] pointsEncoded;
+
 
         @Override
         public void onAsynkTaskFinish(String resultString) {
-
-            drawRoute(mMap, route.buildPolyline(resultString));
+            new RouteDrawer().drawRoute(mMap, route.buildPolyline(resultString));
         }
 
     };
@@ -167,33 +153,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     };
 
-
-
-    public void drawRoute(GoogleMap googleMap, String[] pointsEncoded){
-        //draw the route
-        LatLng start = PolyUtil.decode(pointsEncoded[0]).get(0);
-        mMap.addMarker(new MarkerOptions().position(start).title("Start"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(PolyUtil.decode(pointsEncoded[0]).get(0)));
-
-        int lastPointIndex=PolyUtil.decode(pointsEncoded[pointsEncoded.length-1]).size()-1;
-        LatLng place=PolyUtil.decode(pointsEncoded[pointsEncoded.length-1]).get(lastPointIndex);
-        mMap.addMarker(new MarkerOptions().position(place).title("Finish"));
-
-        PolylineOptions line=new PolylineOptions();
-        line.color(R.color.colorPolyline);
-
-        for(int k=0; k<pointsEncoded.length; k++) {
-            List<LatLng> points=PolyUtil.decode(pointsEncoded[k]);
-            for (int i = 0; i < points.size(); i++) {
-                line.add(points.get(i));
-            }
-        }
-
-        mMap.addPolyline(line);
-        try{googleMap.setMyLocationEnabled(true);}
-        catch (SecurityException se) {}
-
-
-
+    public void onBtRemovePointClick(View view) {
+        route.removePoint();
+        mMap.clear();
+        new RouteDrawer().drawPoints(route,mMap);
     }
 }

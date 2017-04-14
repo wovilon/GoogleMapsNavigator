@@ -60,7 +60,8 @@ tools:context="wovilon.googlemapsapp2.MapsActivity">
         android:layout_height="wrap_content"
         android:id="@+id/ButtonDelete"
         android:layout_below="@+id/ToAutocomplete"
-        android:layout_toEndOf="@+id/ButtonGo" />
+        android:layout_toEndOf="@+id/ButtonGo"
+        android:onClick="onBtRemovePointClick" />
 
 
 </RelativeLayout>

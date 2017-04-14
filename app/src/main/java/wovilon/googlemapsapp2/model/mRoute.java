@@ -13,13 +13,15 @@ import java.util.ArrayList;
 
 public class mRoute {
     private ArrayList<LatLng> points=new ArrayList<>();
+    private ArrayList<String> atributes=new ArrayList<>();
     private String jsonRoute;
     private int pointsNumber=0;
 
 
-    public void addPoint(LatLng point){
+    public void addPoint(LatLng point, String adress){
         pointsNumber++;
         points.add(point);
+        atributes.add(adress);
 
     }
 
@@ -62,6 +64,16 @@ public class mRoute {
 
     public LatLng getPoint(int i){
         return points.get(i);
+    }
+
+    public String getFormatedAdress(int i){
+        return atributes.get(i);
+    }
+
+    public void removePoint(){
+        int i=points.size()-1;
+        points.remove(i);
+        atributes.remove(i);
     }
 
 
