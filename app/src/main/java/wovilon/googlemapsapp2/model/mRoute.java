@@ -13,16 +13,16 @@ import java.util.ArrayList;
 
 public class mRoute {
     private ArrayList<LatLng> points=new ArrayList<>();
-    private ArrayList<String> atributes=new ArrayList<>();
+    private ArrayList<String> attributes=new ArrayList<>();
+    private String[] polyline;
     private String jsonRoute;
     private int pointsNumber=0;
 
 
-    public void addPoint(LatLng point, String adress){
+    public void addPoint(LatLng point, String address){
         pointsNumber++;
         points.add(point);
-        atributes.add(adress);
-
+        attributes.add(address);
     }
 
 
@@ -42,7 +42,9 @@ public class mRoute {
                         .getJSONObject("polyline").getString("points");
                 pointsEncoded[i] = polyline.toString();
             }
+            polyline=pointsEncoded;
             return pointsEncoded;
+
 
         }catch(JSONException je){
             Log.d("MyLOG", "JSONException in AsynkTask while routing");
@@ -66,15 +68,80 @@ public class mRoute {
         return points.get(i);
     }
 
+    public String[] getPolyline(){
+        return polyline;
+    }
+
     public String getFormatedAdress(int i){
-        return atributes.get(i);
+        return attributes.get(i)+"";
+    }
+
+    public ArrayList<String> getAllFormatedAdresses(){
+        return attributes;
     }
 
     public void removePoint(){
         int i=points.size()-1;
         points.remove(i);
-        atributes.remove(i);
+        attributes.remove(i);
     }
+
+    public String getJsonRoute(){
+        return jsonRoute;
+    }
+
+    public String latitudesToJSON(){
+        JSONArray jsonArray = new JSONArray();
+        for (int i=0; i<points.size(); i++) {
+            try{
+                jsonArray.put(points.get(i).latitude);
+            }catch (JSONException je){}
+
+        }
+        String StringJSON = jsonArray.toString();
+        return StringJSON;
+    }
+
+    public ArrayList<String> latitudesFromJSON(String StringJSON){
+        ArrayList<String> array=new ArrayList<>();
+        try {
+            JSONArray jsonArray = new JSONArray(StringJSON);
+            for (int i=0; i<points.size(); i++) {
+                array.add(jsonArray.get(i).toString());
+            }
+
+        }catch (JSONException je){}
+        return array;
+    }
+
+    public String longitudesToJSON(){
+        JSONArray jsonArray = new JSONArray();
+        for (int i=0; i<points.size(); i++) {
+            try{
+                jsonArray.put(points.get(i).longitude);
+            }catch (JSONException je){}
+
+        }
+        String StringJSON = jsonArray.toString();
+        return StringJSON;
+    }
+
+    public ArrayList<String> longitudesFromJSON(String StringJSON){
+        ArrayList<String> array=new ArrayList<>();
+        try {
+            JSONArray jsonArray = new JSONArray(StringJSON);
+            for (int i=0; i<points.size(); i++) {
+                array.add(jsonArray.get(i).toString());
+            }
+
+        }catch (JSONException je){}
+        return array;
+    }
+
+    public void getPointsFromJSON(){
+
+    }
+
 
 
 }

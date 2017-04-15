@@ -42,7 +42,8 @@ tools:context="wovilon.googlemapsapp2.MapsActivity">
         android:layout_height="wrap_content"
         android:id="@+id/buttonMyRoutes"
         android:layout_below="@+id/StartAutocomplete"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:onClick="onBtMyRoutesClick" />
 
     <Button
         android:text="@string/Go"

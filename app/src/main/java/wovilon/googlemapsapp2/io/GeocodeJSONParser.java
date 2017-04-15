@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 public class GeocodeJSONParser {
     private JSONObject jsonObject;
+    private String jsonString;
 
 
     public GeocodeJSONParser(String resultString){
@@ -17,7 +18,9 @@ public class GeocodeJSONParser {
             this.jsonObject=new JSONObject(resultString);
         }catch (JSONException je){
             Log.d("MyLOG","JSONException in AsynkTask while geogoding");}
+    this.jsonString=resultString;
     }
+
 
     public String getFormatedAdress(){
         try {
@@ -39,6 +42,11 @@ public class GeocodeJSONParser {
         }catch (JSONException je){
             Log.d("MyLOG", "JSONException in AsynkTask while geogoding");
             return null;}
+    }
+
+
+    public String getJSONObject(){
+        return jsonString;
     }
 
 }

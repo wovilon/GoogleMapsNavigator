@@ -1,6 +1,8 @@
 package wovilon.googlemapsapp2;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import wovilon.googlemapsapp2.adapters.GooglePlacesAdapter;
+import wovilon.googlemapsapp2.db.DbUpdator;
 import wovilon.googlemapsapp2.google_libraries.PolyUtil;
 import wovilon.googlemapsapp2.interfaces.AsynkTaskHandler;
 import wovilon.googlemapsapp2.io.AsynkRouteRequest;
@@ -46,6 +49,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     GooglePlacesAdapter adapterNextPoint;
     String currentPointJSON;
     mRoute route;
+    Context context=this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,11 +131,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     //works when AsynkRouteRequest finished
     AsynkTaskHandler asynkTaskHandler=new AsynkTaskHandler() {
-
-
         @Override
         public void onAsynkTaskFinish(String resultString) {
             new RouteDrawer().drawRoute(mMap, route.buildPolyline(resultString));
+            //add route to database
+            new DbUpdator(context).addRouteToDb(route);
         }
 
     };
@@ -153,9 +157,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     };
 
+
     public void onBtRemovePointClick(View view) {
         route.removePoint();
         mMap.clear();
         new RouteDrawer().drawPoints(route,mMap);
+
+    }
+
+
+    public void onBtMyRoutesClick(View view) {
+        Intent routesActivityIntent=new Intent(MapsActivity.this, MyRoutesActivity.class);
+        startActivityForResult(routesActivityIntent, 0);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        int routeId=Integer.parseInt(data.getStringExtra("id"));
+        if (route==null){route=new mRoute();}
+
+        DbUpdator db=new DbUpdator(this);
+        String stringRouteJSON=db.getRouteJSONFromDb(routeId);
+        new RouteDrawer().drawRoute(mMap, route.buildPolyline(stringRouteJSON));
+        for (int i=0; i<db.getLatLng(routeId).size(); i++){
+
+            mMap.addMarker(new MarkerOptions().position(db.getLatLng(routeId).get(i)));
+        }
     }
 }
