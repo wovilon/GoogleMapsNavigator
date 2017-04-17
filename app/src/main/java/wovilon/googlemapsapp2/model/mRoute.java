@@ -3,18 +3,22 @@ package wovilon.googlemapsapp2.model;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import wovilon.googlemapsapp2.google_libraries.PolyUtil;
 
 
 public class mRoute {
     private ArrayList<LatLng> points=new ArrayList<>();
     private ArrayList<String> attributes=new ArrayList<>();
-    private String[] polyline;
+    private PolylineOptions polyline;
     private String jsonRoute;
     private int pointsNumber=0;
 
@@ -26,7 +30,7 @@ public class mRoute {
     }
 
 
-    public String[] buildPolyline(String resultString){
+    public PolylineOptions buildPolyline(String resultString){
 
         jsonRoute=resultString;
         String[] pointsEncoded;
@@ -42,8 +46,18 @@ public class mRoute {
                         .getJSONObject("polyline").getString("points");
                 pointsEncoded[i] = polyline.toString();
             }
-            polyline=pointsEncoded;
-            return pointsEncoded;
+
+            //create polyline
+            PolylineOptions line=new PolylineOptions();
+            //line.color(R.color.colorPolyline);
+
+            for(int k=0; k<pointsEncoded.length; k++) {
+                List<LatLng> points= PolyUtil.decode(pointsEncoded[k]);
+                for (int i = 0; i < points.size(); i++) {
+                    line.add(points.get(i));
+                }
+            }
+            return line;
 
 
         }catch(JSONException je){
@@ -68,8 +82,12 @@ public class mRoute {
         return points.get(i);
     }
 
-    public String[] getPolyline(){
+    public PolylineOptions getPolyline(){
         return polyline;
+    }
+
+    public void setPolyjine(PolylineOptions line){
+        this.polyline=line;
     }
 
     public String getFormatedAdress(int i){
@@ -140,6 +158,14 @@ public class mRoute {
 
     public void getPointsFromJSON(){
 
+    }
+
+    public void setPoint(LatLng point){
+        points.add(point);
+    }
+
+    public void setPoints(ArrayList<LatLng> points){
+        this.points=points;
     }
 
 

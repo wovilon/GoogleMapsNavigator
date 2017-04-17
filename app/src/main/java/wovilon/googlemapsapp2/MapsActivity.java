@@ -3,41 +3,31 @@ package wovilon.googlemapsapp2;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 
-import com.google.android.gms.instantapps.internal.Route;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.vision.barcode.Barcode;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 
 import wovilon.googlemapsapp2.adapters.GooglePlacesAdapter;
 import wovilon.googlemapsapp2.db.DbUpdator;
-import wovilon.googlemapsapp2.google_libraries.PolyUtil;
 import wovilon.googlemapsapp2.interfaces.AsynkTaskHandler;
 import wovilon.googlemapsapp2.io.AsynkRouteRequest;
 import wovilon.googlemapsapp2.io.GeocodeJSONParser;
 import wovilon.googlemapsapp2.io.RouteURLComposer;
+import wovilon.googlemapsapp2.model.MarkerAnimator;
 import wovilon.googlemapsapp2.model.RouteDrawer;
 import wovilon.googlemapsapp2.model.mRoute;
 
@@ -98,6 +88,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        /*Animation animation= AnimationUtils.loadAnimation(this, R.anim.linear);
+        animation.reset();
+        Button btRemove=(Button)findViewById(R.id.ButtonDelete);
+        btRemove.clearAnimation();
+        btRemove.startAnimation(animation);
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                animation.start();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+
+        btRemove.clearAnimation();
+        btRemove.startAnimation(animation);*/
+
     }
 
     public void onClickTest(View view) {
@@ -116,6 +131,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
 
     }
 
@@ -159,9 +175,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     public void onBtRemovePointClick(View view) {
-        route.removePoint();
         mMap.clear();
-        new RouteDrawer().drawPoints(route,mMap);
+        if (route!=null) {
+            route.removePoint();
+            new RouteDrawer().drawPoints(route, mMap);
+        }
 
     }
 
@@ -179,10 +197,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         DbUpdator db=new DbUpdator(this);
         String stringRouteJSON=db.getRouteJSONFromDb(routeId);
-        new RouteDrawer().drawRoute(mMap, route.buildPolyline(stringRouteJSON));
+        route.setPolyjine(route.buildPolyline(stringRouteJSON));
+        route.setPoints(db.getLatLng(routeId));
+        new RouteDrawer().drawRoute(mMap, route.getPolyline());
         for (int i=0; i<db.getLatLng(routeId).size(); i++){
 
-            mMap.addMarker(new MarkerOptions().position(db.getLatLng(routeId).get(i)));
+            //mMap.addMarker(new MarkerOptions().position(route.getPoint(i)));
         }
+
+        MarkerAnimator markerAnimator=new MarkerAnimator(mMap, route);
+        markerAnimator.execute();
+
+        /*for(int i=0; i<route.getPolyline().getPoints().size(); i++){
+            markerAnimator.setIteration(i);
+            markerAnimator.execute();
+        }*/
     }
+
+
 }

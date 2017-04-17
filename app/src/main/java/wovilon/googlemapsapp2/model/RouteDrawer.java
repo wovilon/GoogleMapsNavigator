@@ -4,6 +4,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.List;
@@ -17,19 +18,9 @@ import wovilon.googlemapsapp2.google_libraries.PolyUtil;
 
 public class RouteDrawer {
 
-    public void drawRoute(GoogleMap mMap, String[] pointsEncoded){
+    public void drawRoute(GoogleMap mMap, PolylineOptions line){
         //draw the route
 
-
-        PolylineOptions line=new PolylineOptions();
-        line.color(R.color.colorPolyline);
-
-        for(int k=0; k<pointsEncoded.length; k++) {
-            List<LatLng> points= PolyUtil.decode(pointsEncoded[k]);
-            for (int i = 0; i < points.size(); i++) {
-                line.add(points.get(i));
-            }
-        }
 
         mMap.addPolyline(line);
         try{mMap.setMyLocationEnabled(true);}
