@@ -101,7 +101,7 @@ public class mRoute {
     public void removePoint(){
         int i=points.size()-1;
         points.remove(i);
-        attributes.remove(i);
+        try{attributes.remove(i);}catch (IndexOutOfBoundsException io){}
     }
 
     public String getJsonRoute(){

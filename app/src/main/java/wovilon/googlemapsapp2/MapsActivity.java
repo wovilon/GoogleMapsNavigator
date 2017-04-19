@@ -15,6 +15,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -49,7 +51,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
 
         //start point autocomplete. Here we define an adapter as well
         AutoCompleteTextView startEdit=(AutoCompleteTextView)findViewById(R.id.StartAutocomplete);
@@ -136,13 +137,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void onBtGoClick(View view) {
-        URL url=new RouteURLComposer(this,route).formURL();
-        //make http request with above url to get route from Google API
-        AsynkRouteRequest asynkRouteRequest = new AsynkRouteRequest(this, url, asynkTaskHandler);
-        asynkRouteRequest.execute();
-        //hide keyboard
-        InputMethodManager inputMethodManager=(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
-        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(),0);
+        try{
+            URL url=new RouteURLComposer(this,route).formURL();
+            //make http request with above url to get route from Google API
+            AsynkRouteRequest asynkRouteRequest = new AsynkRouteRequest(this, url, asynkTaskHandler);
+            asynkRouteRequest.execute();
+            //hide keyboard
+            InputMethodManager inputMethodManager=(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(),0);
+        }catch (NullPointerException ne){
+            //do nothing, so that not enough points are added
+        }
+
+
     }
 
     //works when AsynkRouteRequest finished
@@ -152,6 +159,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             new RouteDrawer().drawRoute(mMap, route.buildPolyline(resultString));
             //add route to database
             new DbUpdator(context).addRouteToDb(route);
+
+            route.setPolyjine(route.buildPolyline(route.getJsonRoute()));
+            MarkerAnimator markerAnimator=new MarkerAnimator(getBaseContext(), mMap, route);
+            markerAnimator.execute();
         }
 
     };
@@ -192,27 +203,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        int routeId=Integer.parseInt(data.getStringExtra("id"));
-        if (route==null){route=new mRoute();}
+        try {
+            int routeId = Integer.parseInt(data.getStringExtra("id"));
+            if (route == null) {
+                route = new mRoute();
+            }
 
-        DbUpdator db=new DbUpdator(this);
-        String stringRouteJSON=db.getRouteJSONFromDb(routeId);
-        route.setPolyjine(route.buildPolyline(stringRouteJSON));
-        route.setPoints(db.getLatLng(routeId));
-        new RouteDrawer().drawRoute(mMap, route.getPolyline());
-        for (int i=0; i<db.getLatLng(routeId).size(); i++){
+            mMap.clear();
+            DbUpdator db = new DbUpdator(this);
+            String stringRouteJSON = db.getRouteJSONFromDb(routeId);
+            route.setPolyjine(route.buildPolyline(stringRouteJSON));
+            route.setPoints(db.getLatLng(routeId));
+            new RouteDrawer().drawRoute(mMap, route.getPolyline());
+            for (int i = 0; i < db.getLatLng(routeId).size(); i++) {
 
-            //mMap.addMarker(new MarkerOptions().position(route.getPoint(i)));
-        }
+                //mMap.addMarker(new MarkerOptions().position(route.getPoint(i)));
+            }
+            LatLngBounds bounds;
+            try {
+                bounds = new LatLngBounds(
+                        route.getPolyline().getPoints().get(route.getPolyline().getPoints().size() - 1),
+                        route.getPolyline().getPoints().get(0));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(route.getPolyline().getPoints().get(0)));
+            } catch (IllegalArgumentException e) {
+                bounds = new LatLngBounds(
+                        route.getPolyline().getPoints().get(0),
+                        route.getPolyline().getPoints().get(route.getPolyline().getPoints().size() - 1));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(route.getPolyline().getPoints().get(0)));
+            }
 
-        MarkerAnimator markerAnimator=new MarkerAnimator(mMap, route);
-        markerAnimator.execute();
+
+            MarkerAnimator markerAnimator = new MarkerAnimator(this, mMap, route);
+            markerAnimator.execute();
 
         /*for(int i=0; i<route.getPolyline().getPoints().size(); i++){
             markerAnimator.setIteration(i);
             markerAnimator.execute();
         }*/
+        }catch (NullPointerException ne){//do nothing, so that no route choosen}
     }
 
 
-}
+}}
