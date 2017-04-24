@@ -3,17 +3,13 @@ package wovilon.googlemapsapp2;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-
 import java.util.ArrayList;
 
-import wovilon.googlemapsapp2.adapters.GooglePlacesAdapter;
 import wovilon.googlemapsapp2.db.DbUpdator;
-import wovilon.googlemapsapp2.model.mRoute;
 
 
 public class MyRoutesActivity extends AppCompatActivity {

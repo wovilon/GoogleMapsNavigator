@@ -6,7 +6,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.google.android.gms.instantapps.internal.Route;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;

@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -17,7 +18,6 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.net.URL;
@@ -80,11 +80,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         toEdit.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                GeocodeJSONParser point = new GeocodeJSONParser(currentPointJSON);
-                mMap.addMarker(new MarkerOptions().position(point.getLatLng()).title(point.getFormatedAdress()));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(point.getLatLng()));
-                route.addPoint(point.getLatLng(),point.getFormatedAdress());
-                toEdit.setText("");
+                if (route.getPoints().size()<=5) {
+                    GeocodeJSONParser point = new GeocodeJSONParser(currentPointJSON);
+                    mMap.addMarker(new MarkerOptions().position(point.getLatLng()).title(point.getFormatedAdress()));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(point.getLatLng()));
+                    route.addPoint(point.getLatLng(), point.getFormatedAdress());
+                    toEdit.setText("");
+                }else{
+                    Toast.makeText(context,getString(R.string.MaxPoints),Toast.LENGTH_SHORT);}
 
             }
         });
@@ -217,22 +220,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             new RouteDrawer().drawRoute(mMap, route.getPolyline());
             for (int i = 0; i < db.getLatLng(routeId).size(); i++) {
 
-                //mMap.addMarker(new MarkerOptions().position(route.getPoint(i)));
+                mMap.addMarker(new MarkerOptions().position(route.getPoint(i)));
             }
             LatLngBounds bounds;
-            try {
-                bounds = new LatLngBounds(
-                        route.getPolyline().getPoints().get(route.getPolyline().getPoints().size() - 1),
-                        route.getPolyline().getPoints().get(0));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(route.getPolyline().getPoints().get(0)));
-            } catch (IllegalArgumentException e) {
-                bounds = new LatLngBounds(
-                        route.getPolyline().getPoints().get(0),
-                        route.getPolyline().getPoints().get(route.getPolyline().getPoints().size() - 1));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(route.getPolyline().getPoints().get(0)));
-            }
+
+            LatLng start = route.getPolyline().getPoints().get(0);
+            LatLng finish = route.getPolyline().getPoints().get(route.getPolyline().getPoints().size() - 1);
+
+            bounds = new LatLngBounds(
+                    new LatLng(Math.min(start.latitude, finish.latitude),
+                                Math.min(start.longitude, finish.longitude)),
+                    new LatLng(Math.max(start.latitude, finish.latitude),
+                                Math.max(start.longitude, finish.longitude)));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(route.getPolyline().getPoints().get(0)));
 
 
             MarkerAnimator markerAnimator = new MarkerAnimator(this, mMap, route);

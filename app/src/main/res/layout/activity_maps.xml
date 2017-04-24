@@ -15,35 +15,38 @@ tools:context="wovilon.googlemapsapp2.MapsActivity">
         android:layout_height="match_parent"
         tools:context="wovilon.googlemapsapp2.MapsActivity"
         tools:layout="@android:layout/activity_list_item"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
 
     <AutoCompleteTextView
         android:layout_height="wrap_content"
         android:id="@+id/StartAutocomplete"
         android:hint="@string/From"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
         android:layout_width="180dp"
-        android:completionThreshold="3"/>
+        android:completionThreshold="3"
+        android:layout_above="@+id/ToAutocomplete"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/ButtonGo" />
 
     <AutoCompleteTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:id="@+id/ToAutocomplete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:completionThreshold="3"
         android:hint="@string/To"
-        android:layout_alignParentTop="true"
-        android:layout_toEndOf="@+id/StartAutocomplete"
-        android:completionThreshold="3"/>
+        android:layout_toStartOf="@+id/buttonMyRoutes" />
 
     <Button
         android:text="@string/MyRoutes"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/buttonMyRoutes"
-        android:layout_below="@+id/StartAutocomplete"
-        android:layout_alignParentStart="true"
-        android:onClick="onBtMyRoutesClick" />
+        android:onClick="onBtMyRoutesClick"
+        android:layout_alignBaseline="@+id/ToAutocomplete"
+        android:layout_alignBottom="@+id/ToAutocomplete"
+        android:layout_alignParentEnd="true" />
 
     <Button
         android:text="@string/Go"
@@ -51,18 +54,20 @@ tools:context="wovilon.googlemapsapp2.MapsActivity">
         android:layout_height="wrap_content"
         android:id="@+id/ButtonGo"
         android:onClick="onBtGoClick"
-        android:layout_alignBaseline="@+id/buttonMyRoutes"
-        android:layout_alignBottom="@+id/buttonMyRoutes"
-        android:layout_toEndOf="@+id/buttonMyRoutes" />
+        android:layout_alignBaseline="@+id/StartAutocomplete"
+        android:layout_alignBottom="@+id/StartAutocomplete"
+        android:layout_toStartOf="@+id/ButtonDelete" />
 
     <Button
         android:text="@string/RemovePoint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/ButtonDelete"
-        android:layout_below="@+id/ToAutocomplete"
-        android:layout_toEndOf="@+id/ButtonGo"
-        android:onClick="onBtRemovePointClick" />
+        android:onClick="onBtRemovePointClick"
+        android:layout_alignBaseline="@+id/ButtonGo"
+        android:layout_alignBottom="@+id/ButtonGo"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@+id/ToAutocomplete" />
 
 
 </RelativeLayout>

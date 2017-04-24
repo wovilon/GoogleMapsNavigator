@@ -1,9 +1,10 @@
 <resources>
-    <string name="app_name">GoogleMaps App2</string>
+    <string name="app_name">Test task</string>
     <string name="title_activity_maps">Map</string>
-    <string name="From">From</string>
-    <string name="To">Add waypoint</string>
-    <string name="Go">Go</string>
-    <string name="MyRoutes">My routes</string>
-    <string name="RemovePoint">Remove point</string>
+    <string name="From">Откуда</string>
+    <string name="To">Добавить точку</string>
+    <string name="Go">Поехали!</string>
+    <string name="MyRoutes">Мои маршруты</string>
+    <string name="RemovePoint">Удалить точку</string>
+    <string name="MaxPoints">Достигнуто максимальное количество точек!</string>
 </resources>
